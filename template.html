@@ -164,7 +164,7 @@ button, input, select { font: inherit; color: inherit; }
   border: 1px solid var(--line);
   background: var(--card);
   border-radius: 999px;
-  padding: 10px 14px;
+  padding: 12px 14px;
   font-size: .92rem;
   cursor: pointer;
   line-height: 1.1;
@@ -178,13 +178,13 @@ button, input, select { font: inherit; color: inherit; }
 }
 .resumen .cuenta { font-size: 1.15rem; font-weight: 700; margin: 0; }
 .limpiar {
-  border: 0; background: none; padding: 4px 0;
+  border: 0; background: none; padding: 12px 0;
   color: var(--blue); text-decoration: underline; text-underline-offset: 3px;
   cursor: pointer;
 }
 .orden { margin-left: auto; display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .92rem; }
 .orden select {
-  height: 36px; border-radius: 8px; border: 1px solid var(--line);
+  height: 44px; border-radius: 8px; border: 1px solid var(--line);
   background: var(--card); padding: 0 8px; color: var(--ink);
 }
 
@@ -219,8 +219,9 @@ button, input, select { font: inherit; color: inherit; }
 @media (min-width: 960px) {
   .cuerpo { grid-template-columns: 260px 1fr; gap: 32px; }
   .panel { display: block; position: sticky; top: 84px; align-self: start; max-height: calc(100vh - 100px); overflow: auto; padding-right: 4px; }
-  .btn-filtros, .ver-res { display: none; }
+  .btn-filtros, .ver-res, .velo { display: none; }
 }
+
 
 /* ---------- Tarjetas ---------- */
 .grilla {
@@ -303,6 +304,24 @@ button, input, select { font: inherit; color: inherit; }
 
 .pie { max-width: 1240px; margin: 0 auto; padding: 0 var(--gutter) 40px; color: var(--muted); font-size: .88rem; }
 
+/* Celular: tarjetas compactas en fila (miniatura a la izquierda) para que la lista se recorra rápido */
+@media (max-width: 599px) {
+  .mesa { padding: 28px var(--gutter) 24px; }
+  .somos { margin-top: 20px; }
+  .fichas { gap: 8px; }
+  .ficha { width: 44px; height: 44px; }
+  .grilla { gap: 10px; }
+  .card { display: grid; grid-template-columns: 112px 1fr; }
+  .thumb { aspect-ratio: auto; height: 100%; min-height: 128px; }
+  .ph { font-size: 1.8rem; }
+  .card-b { padding: 10px 12px 12px; gap: 6px; }
+  .card h3 { font-size: 1.05rem; }
+  .card .tipo, .datos { font-size: .84rem; }
+  .datos { gap: 2px 10px; }
+  .pistas { font-size: .74rem; gap: 2px 8px; }
+  .pista i { width: 12px; height: 7px; }
+}
+
 /* ---------- Ficha (modal) ---------- */
 dialog {
   border: 0; padding: 0;
@@ -311,10 +330,12 @@ dialog {
   border-radius: 16px;
   background: var(--card); color: var(--ink);
   box-shadow: 0 24px 60px rgba(10, 30, 20, .35);
+  overscroll-behavior: contain;
 }
+.panel { overscroll-behavior: contain; }
 dialog::backdrop { background: rgba(14, 34, 26, .6); }
 @media (max-width: 600px) {
-  dialog { margin: auto 0 0; width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; max-height: 94vh; }
+  dialog { margin: auto 0 0; width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; max-height: min(94vh, 100%); max-height: 94dvh; }
 }
 dialog[open] { animation: subir .2s ease-out; }
 @keyframes subir { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -359,10 +380,12 @@ dialog[open] { animation: subir .2s ease-out; }
 .f-b .pista i { width: 26px; height: 10px; }
 .f-desc { margin-top: 18px; font-family: var(--serif); font-size: 1.04rem; line-height: 1.62; max-width: 68ch; }
 .f-desc p { margin: 0 0 .9em; }
+.f-acciones { display: flex; flex-wrap: wrap; gap: 4px 24px; margin-top: 6px; }
 .f-link {
-  display: inline-flex; align-items: center; gap: 8px; margin-top: 6px;
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px;
   color: var(--blue); font-weight: 600;
 }
+button.f-link { border: 0; background: none; padding: 0; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -383,7 +406,7 @@ dialog[open] { animation: subir .2s ease-out; }
     <label class="buscar">
       <span class="sr-only">Buscar</span>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" type="search" placeholder="Buscar: traición, zombies, piratas…" autocomplete="off">
+      <input id="q" type="search" placeholder="Buscar: zombies, piratas" autocomplete="off">
     </label>
     <button class="btn-filtros" id="btnFiltros" aria-expanded="false" aria-controls="panel">Filtros<span class="n" id="nFiltros" hidden></span></button>
   </div>
@@ -431,36 +454,39 @@ const FILTROS = [
     ["muyfacil", "Muy fácil", j => j.comp != null && j.comp < 2],
     ["facil", "Fácil", j => j.comp != null && j.comp >= 2 && j.comp < 3],
     ["media", "Media", j => j.comp != null && j.comp >= 3 && j.comp < 4],
-    ["pesada", "Pesada", j => j.comp != null && j.comp >= 4],
+    ["pesada", "Difícil", j => j.comp != null && j.comp >= 4],
   ]},
-  { k: "modo", titulo: "Modo de juego", multi: true, ops: [
-    ["Competitivo", "Competitivo", j => j.modalidad === "Competitivo"],
-    ["Equipos", "Equipos", j => j.modalidad === "Equipos"],
-    ["Cooperativo", "Cooperativo", j => j.modalidad === "Cooperativo"],
-    ["Semicooperativo", "Semicooperativo", j => j.modalidad === "Semicooperativo"],
-  ]},
+  { k: "modo", titulo: "Modo de juego", multi: true, ops: [] },
   { k: "azar", titulo: "Azar", multi: true, ops: [
     ["poco", "Poco", j => j.azar != null && j.azar <= 2],
     ["algo", "Algo", j => j.azar != null && j.azar > 2 && j.azar < 4],
     ["mucho", "Mucho", j => j.azar != null && j.azar >= 4],
   ]},
-  { k: "precio", titulo: "Precio", multi: false, ops: [
-    ["50", "Hasta $50.000", j => j.precio != null && j.precio <= 50000],
-    ["100", "Hasta $100.000", j => j.precio != null && j.precio <= 100000],
-    ["200", "Hasta $200.000", j => j.precio != null && j.precio <= 200000],
-  ]},
+  { k: "precio", titulo: "Precio", multi: false, ops: [] },
   { k: "fam", titulo: "Género", multi: true, ops: [] },
 ];
-// Las familias de género salen de los datos, ordenadas por cantidad de juegos
+// Topes de precio en pesos: con la inflación hay que revisarlos de vez en cuando
+const TOPES_PRECIO = [50000, 100000, 200000];
+const pesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+FILTROS.find(f => f.k === "precio").ops = [
+  ...TOPES_PRECIO.map(t => [String(t / 1000), `Hasta ${pesos.format(t)}`, j => j.precio != null && j.precio <= t]),
+  ["mas", `Más de ${pesos.format(TOPES_PRECIO.at(-1))}`, j => j.precio != null && j.precio > TOPES_PRECIO.at(-1)],
+];
+// Género y modo de juego salen de los datos (si aparece uno nuevo, tiene su chip)
 (() => {
-  const cuenta = {};
-  JUEGOS.forEach(j => cuenta[j.familia] = (cuenta[j.familia] || 0) + 1);
-  FILTROS.find(f => f.k === "fam").ops = Object.keys(cuenta)
-    .sort((a, b) => cuenta[b] - cuenta[a] || a.localeCompare(b, "es"))
-    .map(f => [f, f, j => j.familia === f]);
+  const opciones = (campo, orden) => {
+    const cuenta = {};
+    JUEGOS.forEach(j => { if (j[campo]) cuenta[j[campo]] = (cuenta[j[campo]] || 0) + 1; });
+    return Object.keys(cuenta)
+      .sort((a, b) => (orden ? (orden.indexOf(a) + 1 || 99) - (orden.indexOf(b) + 1 || 99) : 0) || cuenta[b] - cuenta[a] || a.localeCompare(b, "es"))
+      .map(v => [v, v, j => j[campo] === v]);
+  };
+  FILTROS.find(f => f.k === "fam").ops = opciones("familia");
+  FILTROS.find(f => f.k === "modo").ops = opciones("modalidad", ["Competitivo", "Equipos", "Cooperativo", "Semicooperativo"]);
 })();
 
-const MAX_JUG = Math.max(...JUEGOS.map(j => j.jmax || 0));
+// Fichas de jugadores hasta 12 como máximo (un party game para 20 no agrega 20 fichas)
+const MAX_JUG = Math.min(12, Math.max(...JUEGOS.map(j => j.jmax || j.jmin || 0)));
 const estado = { n: null, q: "", orden: "nombre" };
 FILTROS.forEach(f => estado[f.k] = new Set());
 
@@ -490,17 +516,25 @@ const ICO = {
   play: '<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/>',
   x: '<path d="M6 6l12 12M18 6 6 18"/>',
   ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+  share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/>',
 };
 
-const pesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 const fmtPrecio = p => p ? pesos.format(p) : "Sin precio";
-const fmtJug = j => j.jmin == null ? "?" : (j.jmin === j.jmax ? `${j.jmin}` : `${j.jmin}–${j.jmax}`);
-const fmtDur = d => d == null ? "Sin dato" : (d < 60 || d % 60 ? `${d} min` : `${d / 60} h`);
+const fmtJug = j => j.jmin == null ? (j.jmax == null ? "?" : `hasta ${j.jmax}`)
+  : j.jmax == null ? `${j.jmin}+` : (j.jmin === j.jmax ? `${j.jmin}` : `${j.jmin}–${j.jmax}`);
+const fmtDur = d => d == null ? "Sin dato" : d < 60 ? `${d} min` : `${Math.floor(d / 60)} h` + (d % 60 ? ` ${d % 60} min` : "");
+// Si falta el máximo de jugadores, se toma como sin tope; si falta el mínimo, desde 1
+const admite = (j, n) => (j.jmin ?? 1) <= n && n <= (j.jmax ?? Infinity);
 const fmtJugadores = n => `${n} ${n === 1 ? "jugador" : "jugadores"}`;
 const sinTildes = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 // "dragones" encuentra "dragón", "zombies" encuentra "zombie"
 const raiz = p => p.length > 4 ? p.replace(/(es|s)$/, "") : p;
-JUEGOS.forEach(j => j._txt = sinTildes([j.nombre, j.nota, j.tematica, j.genero, j.familia, j.modalidad, ...j.desc].filter(Boolean).join(" ")));
+// Texto de búsqueda: sin tildes ni signos, con espacio al principio para buscar por comienzo de palabra
+const indexar = s => " " + sinTildes(s).replace(/[^a-z0-9ñ]+/g, " ");
+JUEGOS.forEach(j => {
+  j._nom = indexar(j.nombre);
+  j._txt = indexar([j.nombre, j.nota, j.tematica, j.genero, j.familia, j.modalidad, j.modo_orig, ...j.desc].filter(Boolean).join(" "));
+});
 const thumb = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 const iniciales = n => n.replace(/^[¡¿]/, "").split(/[\s:]+/).filter(w => /^[A-ZÁÉÍÓÚÑ0-9]/i.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join("");
 
@@ -509,6 +543,8 @@ function imagen(j, cls) {
   if (!j.video) return ph();
   const img = h("img", { src: thumb(j.video), alt: "", loading: "lazy", decoding: "async", class: cls });
   img.addEventListener("error", () => img.replaceWith(ph()), { once: true });
+  // Si el video se borró, YouTube devuelve una imagen gris de 120x90 en vez de un error
+  img.addEventListener("load", () => { if (img.naturalWidth === 120) img.replaceWith(ph()); }, { once: true });
   return img;
 }
 
@@ -570,23 +606,42 @@ function panelAbierto(abrir) {
   const panel = $("#panel");
   panel.classList.toggle("abierto", abrir);
   $("#btnFiltros").setAttribute("aria-expanded", String(abrir));
-  const hoja = abrir && matchMedia("(max-width: 959px)").matches;
+  const hoja = abrir && MOVIL.matches;
   $("#velo").hidden = !hoja;
   document.body.style.overflow = hoja ? "hidden" : "";
-  if (hoja) { panel.scrollTop = 0; panel.querySelector(".cerrar-panel").focus(); }
-  else if (!abrir) $("#btnFiltros").focus({ preventScroll: true });
+  if (hoja) {
+    panel.setAttribute("role", "dialog"); panel.setAttribute("aria-modal", "true");
+    panel.scrollTop = 0; panel.querySelector(".cerrar-panel").focus();
+  } else {
+    panel.removeAttribute("role"); panel.removeAttribute("aria-modal");
+    if (!abrir && MOVIL.matches) $("#btnFiltros").focus({ preventScroll: true });
+  }
 }
+const MOVIL = matchMedia("(max-width: 959px)");
+// Si la pantalla pasa a escritorio con la hoja abierta (ej. girar una tablet), se cierra
+MOVIL.addEventListener("change", () => { if ($("#panel").classList.contains("abierto")) panelAbierto(false); });
+// Con la hoja abierta, Tab no se escapa al contenido de atrás
+document.addEventListener("keydown", e => {
+  const panel = $("#panel");
+  if (e.key !== "Tab" || panel.getAttribute("aria-modal") !== "true") return;
+  const foco = [...panel.querySelectorAll("button:not(:disabled)")];
+  const primero = foco[0], ultimo = foco[foco.length - 1];
+  if (e.shiftKey && document.activeElement === primero) { e.preventDefault(); ultimo.focus(); }
+  else if (!e.shiftKey && document.activeElement === ultimo) { e.preventDefault(); primero.focus(); }
+  else if (!panel.contains(document.activeElement)) { e.preventDefault(); primero.focus(); }
+});
+
+const palabrasBusqueda = () => sinTildes(estado.q).replace(/[^a-z0-9ñ]+/g, " ").split(" ").filter(Boolean).map(raiz);
 
 function pasa(j, ignorar) {
-  if (estado.n != null && ignorar !== "n" && !(j.jmin <= estado.n && estado.n <= j.jmax)) return false;
+  if (estado.n != null && ignorar !== "n" && !admite(j, estado.n)) return false;
   for (const f of FILTROS) {
     const s = estado[f.k];
     if (!s.size || ignorar === f.k) continue;
     if (!f.ops.some(([val, , fn]) => s.has(val) && fn(j))) return false;
   }
   if (estado.q) {
-    const palabras = sinTildes(estado.q).split(/\s+/).filter(Boolean).map(raiz);
-    if (!palabras.every(p => j._txt.includes(p))) return false;
+    if (!palabrasBusqueda().every(p => j._txt.includes(" " + p))) return false;
   }
   return true;
 }
@@ -629,13 +684,20 @@ function tarjeta(j) {
 
 let listaActual = [];
 function actualizar(desdeHash) {
-  const lista = listaActual = JUEGOS.filter(j => pasa(j)).sort(ORDEN[estado.orden] || ORDEN.nombre);
+  const orden = ORDEN[estado.orden] || ORDEN.nombre;
+  // Con una búsqueda, primero los juegos cuyo nombre coincide
+  const pals = estado.q ? palabrasBusqueda() : [];
+  const enNombre = j => pals.length && pals.every(p => j._nom.includes(" " + p)) ? 0 : 1;
+  const lista = listaActual = JUEGOS.filter(j => pasa(j)).sort((a, b) => enNombre(a) - enNombre(b) || orden(a, b));
   $("#azar").disabled = lista.length < 2;
   const grilla = $("#grilla");
+  const soloBusqueda = estado.q && activos() === 1;
   if (lista.length) grilla.replaceChildren(...lista.map(tarjeta));
   else grilla.replaceChildren(h("div", { class: "vacio" },
-    h("p", {}, "Ningún juego cumple todo eso a la vez. Probá sacando algún filtro."),
-    h("button", { type: "button", onclick: limpiar }, "Limpiar filtros")));
+    h("p", {}, soloBusqueda
+      ? `Ningún juego menciona “${estado.q}”. Probá con otra palabra.`
+      : "Ningún juego cumple todo eso a la vez. Probá sacando algún filtro."),
+    h("button", { type: "button", onclick: limpiar }, soloBusqueda ? "Borrar búsqueda" : "Limpiar filtros")));
 
   const total = lista.length;
   $("#cuenta").textContent = `${total} ${total === 1 ? "juego" : "juegos"}` + (estado.n ? ` para ${fmtJugadores(estado.n)}` : "");
@@ -673,6 +735,7 @@ function guardarHash() {
   if (estado.q) p.set("q", estado.q);
   if (estado.orden !== "nombre") p.set("orden", estado.orden);
   FILTROS.forEach(f => { if (estado[f.k].size) p.set(f.k, [...estado[f.k]].join(",")); });
+  if (juegoAbierto) p.set("juego", juegoAbierto.slug);
   const s = p.toString();
   history.replaceState(null, "", s ? "#" + s : location.pathname + location.search);
 }
@@ -688,11 +751,24 @@ function leerHash() {
   });
   $("#q").value = estado.q;
   $("#orden").value = estado.orden;
+  return JUEGOS.find(j => j.slug === p.get("juego")) || null;
 }
 
 /* ---------- Ficha ---------- */
 const dlg = $("#dlg");
+let juegoAbierto = null;
+async function compartir(j) {
+  const url = location.origin + location.pathname + "#juego=" + j.slug;
+  if (navigator.share) {
+    try { await navigator.share({ title: j.nombre, url }); } catch (_) { /* cancelado */ }
+    return;
+  }
+  const btn = dlg.querySelector(".f-compartir");
+  try { await navigator.clipboard.writeText(url); btn.lastChild.textContent = "Link copiado"; }
+  catch (_) { btn.lastChild.textContent = "No se pudo copiar"; }
+}
 function abrir(j) {
+  juegoAbierto = j;
   const video = h("div", { class: "f-video" }, imagen(j));
   if (j.video) {
     video.append(h("button", {
@@ -722,22 +798,25 @@ function abrir(j) {
         dato("Precio", fmtPrecio(j.precio)),
         dato("Curva de aprendizaje", j.curva || "Sin dato"),
         dato("Género", j.genero || "Sin dato"),
-        dato("Modo", j.modalidad || "Sin dato"),
+        dato("Modo", j.modo_orig || j.modalidad || "Sin dato"),
       ),
       pistas(j),
       h("div", { class: "f-desc" }, j.desc.length ? j.desc.map(p => h("p", {}, p)) : h("p", { class: "f-nota" }, "Todavía no hay descripción de este juego.")),
-      j.url && h("a", { class: "f-link", href: j.url, target: "_blank", rel: "noopener" }, j.video ? "Abrir la reseña en YouTube" : "Abrir la reseña", svg(ICO.ext)),
+      h("div", { class: "f-acciones" },
+        j.url && h("a", { class: "f-link", href: j.url, target: "_blank", rel: "noopener" }, j.video ? "Abrir la reseña en YouTube" : "Abrir la reseña", svg(ICO.ext)),
+        h("button", { class: "f-link f-compartir", type: "button", onclick: () => compartir(j) }, svg(ICO.share), h("span", {}, "Compartir este juego")),
+      ),
     ),
   );
-  dlg.showModal();
+  if (!dlg.open) dlg.showModal();
   dlg.scrollTop = 0;
+  guardarHash();
 }
 dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
-dlg.addEventListener("close", () => dlg.replaceChildren());
+dlg.addEventListener("close", () => { dlg.replaceChildren(); juegoAbierto = null; guardarHash(); });
 
 /* ---------- Arranque ---------- */
 construirFiltros();
-leerHash();
 $("#bajada").textContent = `Los ${JUEGOS.length} juegos de la lista, con precio, duración y de qué se trata cada uno.`;
 let tq;
 $("#q").addEventListener("input", e => { clearTimeout(tq); tq = setTimeout(() => { estado.q = e.target.value.trim(); actualizar(); }, 120); });
@@ -749,8 +828,15 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#panel"
 $("#azar").addEventListener("click", () => {
   if (listaActual.length) abrir(listaActual[Math.floor(Math.random() * listaActual.length)]);
 });
-window.addEventListener("hashchange", () => { leerHash(); actualizar(true); });
+window.addEventListener("hashchange", () => {
+  const jg = leerHash();
+  actualizar(true);
+  if (jg && jg !== juegoAbierto) abrir(jg);
+  else if (!jg && dlg.open) dlg.close();
+});
+const juegoInicial = leerHash();
 actualizar(true);
+if (juegoInicial) abrir(juegoInicial);
 </script>
 </body>
 </html>

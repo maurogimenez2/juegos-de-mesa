@@ -11,6 +11,7 @@ template.html. El Excel original no se modifica.
 import json
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 import openpyxl
@@ -65,7 +66,8 @@ FAMILIAS = {
     "Control territorial": ["control territorial", "wargame ligero"],
     "Party": ["party game", "party game / deducción", "party game / roles ocultos",
               "destreza", "tiempo real"],
-    "Deducción social": ["deducción social", "deducción"],
+    "Deducción social": ["deducción social"],
+    "Deducción / lógica": ["deducción"],
     "Temático / Supervivencia": ["temático / supervivencia", "temático"],
     "Rol / Combate": ["rol / dungeon crawler", "táctico / combate"],
     "Losetas": ["colocación de losetas"],
@@ -100,7 +102,7 @@ TEMATICA_ORTOGRAFIA = {
     "Construccion": "Construcción", "colocacion": "colocación", "dragon": "dragón",
     "Asociacion": "Asociación", "Recontruccion": "Reconstrucción", "Japon": "Japón",
     "fantastico": "fantástico", "cultivandos": "cultivando", "grecia": "Grecia",
-    "contruir": "construir", "Gestion": "Gestión", "ambientado": "ambientada",
+    "contruir": "construir", "Gestion": "Gestión", "Guerra ambientado": "Guerra ambientada",
 }
 
 YT_RE = re.compile(r"(?:youtube\.com/(?:watch\?(?:.*&)?v=|shorts/|embed/)|youtu\.be/)([A-Za-z0-9_-]{11})")
@@ -206,6 +208,8 @@ def main(xlsx_path):
             "familia": familia,
             "tematica": tematica(fila[idx("Temática")]),
             "modalidad": modalidad,
+            # valor original cuando la normalización lo agrupó (ej. "Competitivo por equipos")
+            "modo_orig": modalidad_raw if modalidad_raw and modalidad_raw != modalidad else None,
             "desc": parrafos,
             "jmin": num("Jugadores mínimos"),
             "jmax": num("Jugadores máximos"),
@@ -221,6 +225,17 @@ def main(xlsx_path):
         })
 
     juegos.sort(key=lambda j: j["nombre"].lower().lstrip("¡"))
+
+    # slug para el link directo a un juego (#juego=slug)
+    usados = set()
+    for j in juegos:
+        base = unicodedata.normalize("NFD", j["nombre"]).encode("ascii", "ignore").decode().lower()
+        base = re.sub(r"[^a-z0-9]+", "-", base).strip("-") or "juego"
+        slug, n = base, 2
+        while slug in usados:
+            slug, n = f"{base}-{n}", n + 1
+        usados.add(slug)
+        j["slug"] = slug
     datos = json.dumps(juegos, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     plantilla = (HERE / "template.html").read_text(encoding="utf-8")
     if "/*__DATA__*/" not in plantilla:
