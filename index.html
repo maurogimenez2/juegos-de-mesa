@@ -189,7 +189,10 @@ button, input, select { font: inherit; color: inherit; }
 }
 
 .panel-tit { display: none; }
-.chips-n .chip { min-width: 44px; padding: 10px 0; text-align: center; }
+.chips-n .chip { min-width: 44px; padding: 13px 0; text-align: center; }
+.panel-busq { margin: 0 0 14px; padding: 8px 12px; border-radius: 8px; background: var(--card); color: var(--muted); font-size: .9rem; }
+.panel-busq[hidden] { display: none; }
+.ficha:disabled { opacity: .35; cursor: default; transform: none; }
 @media (max-width: 959px) {
   /* En el celular los filtros se abren como hoja desde abajo, esté donde esté el scroll */
   .panel.abierto {
@@ -212,7 +215,7 @@ button, input, select { font: inherit; color: inherit; }
 }
 .velo[hidden] { display: none; }
 .cerrar-panel {
-  width: 40px; height: 40px; border-radius: 50%;
+  width: 44px; height: 44px; border-radius: 50%;
   border: 1px solid var(--line); background: var(--card);
   display: grid; place-items: center; cursor: pointer;
 }
@@ -320,6 +323,11 @@ button, input, select { font: inherit; color: inherit; }
   .datos { gap: 2px 10px; }
   .pistas { font-size: .74rem; gap: 2px 8px; }
   .pista i { width: 12px; height: 7px; }
+  .precio { margin-left: 0; }
+  /* Resumen en dos renglones como máximo: el select de orden sin etiqueta visible */
+  .resumen { gap: 6px 10px; }
+  .orden-txt { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .orden { margin-left: 0; }
 }
 
 /* ---------- Ficha (modal) ---------- */
@@ -358,9 +366,9 @@ dialog[open] { animation: subir .2s ease-out; }
 .cerrar {
   /* sticky: queda visible aunque se scrollee la ficha */
   position: sticky; top: 10px; z-index: 2;
-  margin: 10px 10px -50px auto;
+  margin: 10px 10px -54px auto;
   box-shadow: 0 2px 8px rgba(0,0,0,.25);
-  width: 40px; height: 40px; border-radius: 50%;
+  width: 44px; height: 44px; border-radius: 50%;
   border: 0; background: rgba(255,255,255,.92); color: var(--ink);
   display: grid; place-items: center; cursor: pointer;
 }
@@ -420,14 +428,14 @@ button.f-link { border: 0; background: none; padding: 0; cursor: pointer; }
       <p class="cuenta" id="cuenta" aria-live="polite"></p>
       <button class="limpiar" id="limpiar" hidden>Limpiar filtros</button>
       <button class="azar-btn" id="azar" type="button">Elegir uno al azar</button>
-      <label class="orden">Ordenar
+      <label class="orden"><span class="orden-txt">Ordenar</span>
         <select id="orden">
           <option value="nombre">Por nombre</option>
           <option value="barato">Más baratos</option>
           <option value="caro">Más caros</option>
           <option value="corto">Más cortos</option>
           <option value="liviano">Más fáciles</option>
-          <option value="pesado">Más complejos</option>
+          <option value="pesado">Más difíciles</option>
           <option value="rejug">Más rejugables</option>
         </select>
       </label>
@@ -528,20 +536,25 @@ const admite = (j, n) => (j.jmin ?? 1) <= n && n <= (j.jmax ?? Infinity);
 const fmtJugadores = n => `${n} ${n === 1 ? "jugador" : "jugadores"}`;
 const sinTildes = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 // "dragones" encuentra "dragón", "zombies" encuentra "zombie"
-const raiz = p => p.length > 4 ? p.replace(/(es|s)$/, "") : p;
+// y en palabras largas se saca la vocal final: "espacio" encuentra "espaciales"
+const raiz = p => {
+  if (p.length > 4) p = p.replace(/(es|s)$/, "");
+  return p.length > 5 ? p.replace(/[aeiou]$/, "") : p;
+};
 // Texto de búsqueda: sin tildes ni signos, con espacio al principio para buscar por comienzo de palabra
 const indexar = s => " " + sinTildes(s).replace(/[^a-z0-9ñ]+/g, " ");
 JUEGOS.forEach(j => {
   j._nom = indexar(j.nombre);
   j._txt = indexar([j.nombre, j.nota, j.tematica, j.genero, j.familia, j.modalidad, j.modo_orig, ...j.desc].filter(Boolean).join(" "));
 });
-const thumb = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+// Tarjetas: miniatura chica (320x180). Ficha: la grande (480x360)
+const thumb = (id, grande) => `https://i.ytimg.com/vi/${id}/${grande ? "hqdefault" : "mqdefault"}.jpg`;
 const iniciales = n => n.replace(/^[¡¿]/, "").split(/[\s:]+/).filter(w => /^[A-ZÁÉÍÓÚÑ0-9]/i.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join("");
 
-function imagen(j, cls) {
+function imagen(j, grande) {
   const ph = () => h("div", { class: "ph", "aria-hidden": "true" }, iniciales(j.nombre));
   if (!j.video) return ph();
-  const img = h("img", { src: thumb(j.video), alt: "", loading: "lazy", decoding: "async", class: cls });
+  const img = h("img", { src: thumb(j.video, grande), alt: "", loading: grande ? "eager" : "lazy", decoding: "async" });
   img.addEventListener("error", () => img.replaceWith(ph()), { once: true });
   // Si el video se borró, YouTube devuelve una imagen gris de 120x90 en vez de un error
   img.addEventListener("load", () => { if (img.naturalWidth === 120) img.replaceWith(ph()); }, { once: true });
@@ -574,6 +587,7 @@ function construirFiltros() {
   panel.append(h("div", { class: "panel-tit" },
     h("h2", {}, "Filtros"),
     h("button", { class: "cerrar-panel", type: "button", "aria-label": "Cerrar filtros", onclick: () => panelAbierto(false) }, svg(ICO.x, 18))));
+  panel.append(h("p", { class: "panel-busq", id: "panelBusq", hidden: true }));
   // Jugadores también dentro del panel, para no tener que volver arriba de todo
   panel.append(h("fieldset", { class: "grupo" },
     h("legend", {}, "¿Cuántos somos?"),
@@ -602,8 +616,15 @@ function construirFiltros() {
   }}, "Ver juegos"));
 }
 
-function panelAbierto(abrir) {
+// "Atrás" del celular: la hoja de filtros y la ficha agregan una entrada al historial,
+// así el botón atrás las cierra en vez de salir de la página (y volver a WhatsApp).
+history.scrollRestoration = "manual";
+function panelAbierto(abrir, desdeAtras) {
   const panel = $("#panel");
+  if (!desdeAtras) {
+    if (abrir && MOVIL.matches && history.state?.capa !== "hoja") history.pushState({ capa: "hoja" }, "", location.href);
+    else if (!abrir && history.state?.capa === "hoja") history.back();
+  }
   panel.classList.toggle("abierto", abrir);
   $("#btnFiltros").setAttribute("aria-expanded", String(abrir));
   const hoja = abrir && MOVIL.matches;
@@ -703,7 +724,12 @@ function actualizar(desdeHash) {
   $("#cuenta").textContent = `${total} ${total === 1 ? "juego" : "juegos"}` + (estado.n ? ` para ${fmtJugadores(estado.n)}` : "");
   $("#verRes").textContent = `Ver ${total} ${total === 1 ? "juego" : "juegos"}`;
 
-  document.querySelectorAll(".ficha, .chip-n").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.n === estado.n)));
+  document.querySelectorAll(".ficha, .chip-n").forEach(b => {
+    const n = +b.dataset.n;
+    b.setAttribute("aria-pressed", String(n === estado.n));
+    // Igual que los otros chips: se apaga la cantidad de jugadores que daría 0 juegos
+    b.disabled = n !== estado.n && !JUEGOS.some(j => pasa(j, "n") && admite(j, n));
+  });
   document.querySelectorAll(".chip:not(.chip-n)").forEach(b => {
     b.setAttribute("aria-pressed", String(estado[b.dataset.f].has(b.dataset.v)));
     // Cuántos juegos quedarían al sumar esta opción: deshabilita las que darían 0
@@ -716,6 +742,10 @@ function actualizar(desdeHash) {
 
   const a = activos();
   $("#limpiar").hidden = a === 0;
+  $("#limpiar").textContent = estado.q && a === 1 ? "Borrar búsqueda" : "Limpiar filtros";
+  // En la hoja de filtros la búsqueda queda tapada: se recuerda que está activa
+  $("#panelBusq").hidden = !estado.q;
+  $("#panelBusq").textContent = estado.q ? `Buscando “${estado.q}”` : "";
   const nf = (estado.n != null ? 1 : 0) + FILTROS.reduce((t, f) => t + estado[f.k].size, 0);
   $("#nFiltros").hidden = nf === 0;
   $("#nFiltros").textContent = nf;
@@ -737,7 +767,8 @@ function guardarHash() {
   FILTROS.forEach(f => { if (estado[f.k].size) p.set(f.k, [...estado[f.k]].join(",")); });
   if (juegoAbierto) p.set("juego", juegoAbierto.slug);
   const s = p.toString();
-  history.replaceState(null, "", s ? "#" + s : location.pathname + location.search);
+  // se conserva history.state para no perder la marca de hoja/ficha abierta
+  history.replaceState(history.state, "", s ? "#" + s : location.pathname + location.search);
 }
 function leerHash() {
   const p = new URLSearchParams(location.hash.slice(1));
@@ -759,7 +790,8 @@ const dlg = $("#dlg");
 let juegoAbierto = null;
 async function compartir(j) {
   const url = location.origin + location.pathname + "#juego=" + j.slug;
-  if (navigator.share) {
+  // En el celular, el menú de compartir del teléfono; en la compu, copiar el link
+  if (navigator.share && matchMedia("(pointer: coarse)").matches) {
     try { await navigator.share({ title: j.nombre, url }); } catch (_) { /* cancelado */ }
     return;
   }
@@ -769,7 +801,7 @@ async function compartir(j) {
 }
 function abrir(j) {
   juegoAbierto = j;
-  const video = h("div", { class: "f-video" }, imagen(j));
+  const video = h("div", { class: "f-video" }, imagen(j, true));
   if (j.video) {
     video.append(h("button", {
       class: "play", type: "button", "aria-label": `Ver la reseña de ${j.nombre}`,
@@ -808,18 +840,45 @@ function abrir(j) {
       ),
     ),
   );
-  if (!dlg.open) dlg.showModal();
+  if (!dlg.open) {
+    dlg.showModal();
+    if (history.state?.capa !== "ficha") history.pushState({ capa: "ficha" }, "", location.href);
+  }
   dlg.scrollTop = 0;
   guardarHash();
 }
 dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
-dlg.addEventListener("close", () => { dlg.replaceChildren(); juegoAbierto = null; guardarHash(); });
+dlg.addEventListener("close", () => {
+  dlg.replaceChildren();
+  juegoAbierto = null;
+  // Cerrada con X, Escape o tocando afuera: se saca la entrada del historial que agregó la ficha
+  if (history.state?.capa === "ficha") history.back();
+  else guardarHash();
+});
+window.addEventListener("popstate", e => {
+  const capa = e.state?.capa;
+  if (capa !== "hoja" && $("#panel").classList.contains("abierto") && MOVIL.matches) panelAbierto(false, true);
+  if (capa !== "ficha" && dlg.open) { juegoAbierto = null; dlg.close(); }
+  // La entrada anterior puede tener filtros viejos: se reescribe con los actuales
+  guardarHash();
+});
 
 /* ---------- Arranque ---------- */
 construirFiltros();
 $("#bajada").textContent = `Los ${JUEGOS.length} juegos de la lista, con precio, duración y de qué se trata cada uno.`;
 let tq;
-$("#q").addEventListener("input", e => { clearTimeout(tq); tq = setTimeout(() => { estado.q = e.target.value.trim(); actualizar(); }, 120); });
+$("#q").addEventListener("input", e => {
+  clearTimeout(tq);
+  tq = setTimeout(() => {
+    const v = e.target.value.trim();
+    // "4 jugadores" o "somos 6": se usa el filtro de jugadores en vez de buscar el texto
+    const m = sinTildes(v).match(/^(?:somos\s+)?(\d{1,2})\s*(?:jugadores?|personas?)?$/);
+    const n = m && (m[0].includes("somos") || /\D/.test(m[0])) ? +m[1] : null;
+    if (n >= 1 && n <= MAX_JUG) { estado.n = n; estado.q = ""; e.target.value = ""; }
+    else estado.q = v;
+    actualizar();
+  }, 120);
+});
 $("#orden").addEventListener("change", e => { estado.orden = e.target.value; actualizar(); });
 $("#limpiar").addEventListener("click", limpiar);
 $("#btnFiltros").addEventListener("click", () => panelAbierto(!$("#panel").classList.contains("abierto")));
@@ -835,7 +894,8 @@ window.addEventListener("hashchange", () => {
   else if (!jg && dlg.open) dlg.close();
 });
 const juegoInicial = leerHash();
-actualizar(true);
+// Sin guardar el juego en esta entrada: al abrir la ficha se agrega otra, y "atrás" vuelve a la lista
+actualizar();
 if (juegoInicial) abrir(juegoInicial);
 </script>
 </body>

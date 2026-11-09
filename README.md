@@ -10,7 +10,9 @@ La página se genera a partir del Excel del grupo:
 python build.py "ruta/al/Juegos de mesa.xlsx"
 ```
 
-Eso regenera `index.html` y después alcanza con subirlo de nuevo al repo.
+En Windows, si `python` no está en el PATH: `"C:\Program Files\Python313\python.exe" build.py "..."`.
+
+Eso regenera `index.html`. Para publicarlo, en la web de GitHub: **Add file → Upload files**, arrastrar `index.html` (y `build.py` / `template.html` si cambiaron) y **Commit changes**. A veces el primer clic en "Commit changes" no hace nada: esperar a que aparezca "Processing your files…" o volver a hacer clic.
 
 - Las columnas del Excel tienen que mantener sus nombres (Juego, Precio, Género, etc.).
 - La imagen de cada juego es la miniatura del video de YouTube de la columna "Link reseña". Si no hay link, se muestran las iniciales.

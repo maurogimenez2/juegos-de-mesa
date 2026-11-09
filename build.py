@@ -179,8 +179,8 @@ def main(xlsx_path):
         modalidad = MODALIDAD.get(modalidad_raw.lower())
         if not modalidad and modalidad_raw:
             modalidad = modalidad_raw
-            avisos.append(f"Modalidad nueva sin filtro: '{modalidad_raw}' ({nombre}). "
-                          "Agregarla en MODALIDAD (build.py) y en los chips 'modo' de template.html")
+            avisos.append(f"Modalidad nueva: '{modalidad_raw}' ({nombre}). Tiene su propio filtro; "
+                          "si hay que agruparla con otra, agregarla en MODALIDAD (build.py)")
 
         curva_raw = (limpio(fila[idx("Curva de aprendizaje")]) or "").lower()
         curva = CURVA.get(curva_raw, curva_raw.capitalize() or None)
