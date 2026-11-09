@@ -27,7 +27,7 @@ NOMBRES = {
     "Wavelenght": ("Wavelength", None),
     "Explodingkittens": ("Exploding Kittens", None),
     "ArkNova": ("Ark Nova", None),
-    "Codigo secreto": ("Código Secreto", None),
+    "Codigo secreto": ("Código secreto", None),
     "Lord of waterdeep": ("Lords of Waterdeep", None),
     "King of tokyo": ("King of Tokyo", None),
     "Gunsen: The batlle for Toshi Ranbo": ("Gunsen: The Battle for Toshi Ranbo", None),
@@ -48,15 +48,14 @@ NOMBRES = {
     "Say my name": ("Say My Name", None),
     "One round": ("One Round", None),
     "Garabatos fatidicos": ("Garabatos fatídicos", None),
-    "Gloomhaven: fauces del leon": ("Gloomhaven: Fauces del León", None),
-    "La tripulacion": ("La Tripulación", None),
-    "La tripulacion: mar profundo": ("La Tripulación: Mar Profundo", None),
-    "Las ruinas perdidas de Arnak": ("Las Ruinas Perdidas de Arnak", None),
+    "Gloomhaven: fauces del leon": ("Gloomhaven: fauces del león", None),
+    "La tripulacion": ("La tripulación", None),
+    "La tripulacion: mar profundo": ("La tripulación: mar profundo", None),
     "The red cathedral": ("The Red Cathedral", None),
     "The Manhattan Project: Energy empire": ("The Manhattan Project: Energy Empire", None),
-    "Eclipse: el segundo amanecer de la galaxia": ("Eclipse: El Segundo Amanecer de la Galaxia", None),
     "Sushi Go Party": ("Sushi Go Party!", None),
-    "Aventureros al tren": ("¡Aventureros al Tren!", None),
+    "Aventureros al tren": ("¡Aventureros al tren!", None),
+    "Pasaron Cosas": ("Pasaron cosas", None),
 }
 
 # Género original -> familia para filtrar (el original se sigue mostrando en la ficha)
@@ -95,7 +94,17 @@ CURVA = {
     "muy alta": "Muy alta",
 }
 
+# Errores de tipeo en la columna Temática (solo ortografía, se respeta el texto del grupo)
+TEMATICA_ORTOGRAFIA = {
+    "fantasia": "fantasía", "mitologia": "mitología", "poltica": "política", "españa": "España",
+    "Construccion": "Construcción", "colocacion": "colocación", "dragon": "dragón",
+    "Asociacion": "Asociación", "Recontruccion": "Reconstrucción", "Japon": "Japón",
+    "fantastico": "fantástico", "cultivandos": "cultivando", "grecia": "Grecia",
+    "contruir": "construir", "Gestion": "Gestión", "ambientado": "ambientada",
+}
+
 YT_RE = re.compile(r"(?:youtube\.com/(?:watch\?(?:.*&)?v=|shorts/|embed/)|youtu\.be/)([A-Za-z0-9_-]{11})")
+YT_T_RE = re.compile(r"[?&]t=(\d+)s?(?:&|$)")
 
 
 def limpio(v):
@@ -105,17 +114,41 @@ def limpio(v):
     return s or None
 
 
-def numero(v):
-    if v in (None, ""):
+def tematica(v):
+    s = limpio(v)
+    if not s:
         return None
-    try:
-        return float(v)
-    except (TypeError, ValueError):
-        return None
+    for mal, bien in TEMATICA_ORTOGRAFIA.items():
+        s = re.sub(rf"\b{mal}\b", bien, s)
+    return s.rstrip(".")
+
+
+def genero_legible(g):
+    # "Control Territorial" y "Control territorial" se muestran igual
+    return g[:1].upper() + g[1:].lower() if g else g
 
 
 def main(xlsx_path):
-    ws = openpyxl.load_workbook(xlsx_path).worksheets[0]
+    # data_only: si alguna celda tiene fórmula, se usa el valor calculado
+    ws = openpyxl.load_workbook(xlsx_path, data_only=True).worksheets[0]
+    avisos = []
+
+    def numero(v, nombre, columna):
+        """Convierte a número. Acepta '1,5', '$50.000' o '90 min'; si no puede, avisa."""
+        if v in (None, ""):
+            return None
+        if isinstance(v, (int, float)):
+            return float(v)
+        s = str(v).strip().replace("$", "").replace(" ", "")
+        s = re.sub(r"(?i)min(utos)?$", "", s)
+        if re.fullmatch(r"\d{1,3}(\.\d{3})+", s):  # 50.000 -> 50000
+            s = s.replace(".", "")
+        s = s.replace(",", ".")
+        try:
+            return float(s)
+        except ValueError:
+            avisos.append(f"Valor no numérico en '{columna}' de {nombre}: {v!r} (queda vacío)")
+            return None
     headers = [limpio(c.value) for c in ws[1]]
     col = {h: i for i, h in enumerate(headers) if h}
 
@@ -125,7 +158,7 @@ def main(xlsx_path):
         return col[nombre]
 
     c_link = idx("Link reseña")
-    juegos, avisos = [], []
+    juegos = []
 
     for r in range(2, ws.max_row + 1):
         fila = [c.value for c in ws[r]]
@@ -141,7 +174,11 @@ def main(xlsx_path):
             avisos.append(f"Género sin familia: '{genero}' ({nombre})")
 
         modalidad_raw = limpio(fila[idx("Modalidad")]) or ""
-        modalidad = MODALIDAD.get(modalidad_raw.lower(), modalidad_raw or None)
+        modalidad = MODALIDAD.get(modalidad_raw.lower())
+        if not modalidad and modalidad_raw:
+            modalidad = modalidad_raw
+            avisos.append(f"Modalidad nueva sin filtro: '{modalidad_raw}' ({nombre}). "
+                          "Agregarla en MODALIDAD (build.py) y en los chips 'modo' de template.html")
 
         curva_raw = (limpio(fila[idx("Curva de aprendizaje")]) or "").lower()
         curva = CURVA.get(curva_raw, curva_raw.capitalize() or None)
@@ -152,8 +189,12 @@ def main(xlsx_path):
         video = m.group(1) if m else None
         if url and not video:
             avisos.append(f"Link que no es de YouTube: {nombre} -> {url}")
+        t = YT_T_RE.search(url or "") if video else None
 
-        precio = numero(fila[idx("Precio")])
+        def num(columna):
+            return numero(fila[idx(columna)], nombre, columna)
+
+        precio = num("Precio")
         desc = str(fila[idx("Descripción breve")] or "").strip()
         parrafos = [p.strip() for p in desc.split("\n") if p.strip()]
 
@@ -161,19 +202,21 @@ def main(xlsx_path):
             "nombre": nombre,
             "nota": nota,
             "precio": precio if precio else None,
-            "genero": genero,
+            "genero": genero_legible(genero),
             "familia": familia,
-            "tematica": limpio(fila[idx("Temática")]),
+            "tematica": tematica(fila[idx("Temática")]),
             "modalidad": modalidad,
             "desc": parrafos,
-            "jmin": numero(fila[idx("Jugadores mínimos")]),
-            "jmax": numero(fila[idx("Jugadores máximos")]),
-            "dur": numero(fila[idx("Duración máxima (min)")]),
-            "comp": numero(fila[idx("Complejidad (1-5)")]),
-            "azar": numero(fila[idx("Azar (1-5)")]),
-            "rejug": numero(fila[idx("Rejugabilidad (1-5)")]),
+            "jmin": num("Jugadores mínimos"),
+            "jmax": num("Jugadores máximos"),
+            "dur": num("Duración máxima (min)"),
+            "comp": num("Complejidad (1-5)"),
+            "azar": num("Azar (1-5)"),
+            "rejug": num("Rejugabilidad (1-5)"),
             "curva": curva,
             "video": video,
+            "short": bool(video and "/shorts/" in url),
+            "inicio": int(t.group(1)) if t else None,
             "url": url if url and url.startswith("http") else None,
         })
 

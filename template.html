@@ -7,6 +7,12 @@
 <meta name="description" content="Lista de juegos de mesa con filtros por cantidad de jugadores, duración, complejidad y precio.">
 <meta property="og:title" content="¿A qué jugamos?">
 <meta property="og:description" content="Lista de juegos de mesa con filtros por cantidad de jugadores, duración, complejidad y precio.">
+<meta property="og:image" content="https://maurogimenez2.github.io/juegos-de-mesa/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://maurogimenez2.github.io/juegos-de-mesa/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#1D4A39">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23F0B429' d='M16 2a5 5 0 0 1 5 5c0 1.3-.5 2.5-1.3 3.4L29 13c1.6.5 1.6 2.7 0 3.2l-6.5 2L26 28c.4 1.1-.4 2-1.5 2h-5L16 23l-3.5 7h-5c-1.1 0-1.9-.9-1.5-2l3.5-9.8-6.5-2c-1.6-.5-1.6-2.7 0-3.2l9.3-2.6A5 5 0 0 1 16 2z'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -158,7 +164,7 @@ button, input, select { font: inherit; color: inherit; }
   border: 1px solid var(--line);
   background: var(--card);
   border-radius: 999px;
-  padding: 7px 12px;
+  padding: 10px 14px;
   font-size: .92rem;
   cursor: pointer;
   line-height: 1.1;
@@ -182,6 +188,34 @@ button, input, select { font: inherit; color: inherit; }
   background: var(--card); padding: 0 8px; color: var(--ink);
 }
 
+.panel-tit { display: none; }
+.chips-n .chip { min-width: 44px; padding: 10px 0; text-align: center; }
+@media (max-width: 959px) {
+  /* En el celular los filtros se abren como hoja desde abajo, esté donde esté el scroll */
+  .panel.abierto {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    max-height: 85vh; max-height: 85dvh; overflow: auto;
+    background: var(--paper);
+    border-radius: 16px 16px 0 0;
+    padding: 0 var(--gutter) 0;
+    box-shadow: 0 -12px 40px rgba(10, 30, 20, .35);
+  }
+  .panel-tit {
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 1;
+    background: var(--paper);
+    padding: 14px 0 10px; margin-bottom: 4px;
+  }
+  .panel-tit h2 { margin: 0; font-size: 1.3rem; }
+  .ver-res { position: sticky; bottom: 0; margin: 4px 0 0; box-shadow: inset 0 -3px 0 var(--yellow-edge), 0 -10px 16px var(--paper); }
+  .velo { position: fixed; inset: 0; z-index: 19; background: rgba(14, 34, 26, .5); }
+}
+.velo[hidden] { display: none; }
+.cerrar-panel {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 1px solid var(--line); background: var(--card);
+  display: grid; place-items: center; cursor: pointer;
+}
 @media (min-width: 960px) {
   .cuerpo { grid-template-columns: 260px 1fr; gap: 32px; }
   .panel { display: block; position: sticky; top: 84px; align-self: start; max-height: calc(100vh - 100px); overflow: auto; padding-right: 4px; }
@@ -227,6 +261,13 @@ button, input, select { font: inherit; color: inherit; }
 .estirar:focus-visible { outline: none; }
 .card:has(.estirar:focus-visible) { outline: 3px solid var(--blue); outline-offset: 2px; }
 .card .tipo { margin: 0; color: var(--muted); font-size: .9rem; }
+.card .nota { margin: -4px 0 0; color: var(--muted); font-size: .85rem; font-style: italic; }
+.azar-btn {
+  border: 1px solid var(--ink); background: var(--card); color: var(--ink);
+  border-radius: 999px; padding: 8px 14px; font-weight: 600; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.azar-btn:disabled { opacity: .4; cursor: default; }
 .datos { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .92rem; align-items: center; }
 .datos span { display: inline-flex; align-items: center; gap: 4px; }
 .datos svg { color: var(--muted); flex: none; }
@@ -240,7 +281,9 @@ button, input, select { font: inherit; color: inherit; }
 .pista i {
   width: 16px; height: 8px; border-radius: 2px;
   background: var(--track-off);
+  box-shadow: inset 0 0 0 1px #9AA49D;
 }
+.pista i.on, .pista i.half { box-shadow: none; }
 .pista[data-k="comp"] { --c: var(--blue); }
 .pista[data-k="azar"] { --c: var(--red); }
 .pista[data-k="rejug"] { --c: var(--green); }
@@ -281,6 +324,9 @@ dialog[open] { animation: subir .2s ease-out; }
 }
 .f-video { position: relative; aspect-ratio: 16 / 9; background: var(--felt-deep); }
 .f-video img, .f-video iframe { width: 100%; height: 100%; object-fit: cover; display: block; border: 0; }
+/* Los Shorts son verticales: se reproducen en un marco 9:16 centrado */
+.f-video.es-short { aspect-ratio: auto; height: min(72vh, 640px); }
+.f-video.es-short iframe { width: auto; aspect-ratio: 9 / 16; max-width: 100%; margin: 0 auto; }
 .play {
   position: absolute; inset: 0; margin: auto;
   width: 72px; height: 72px; border-radius: 50%;
@@ -289,7 +335,10 @@ dialog[open] { animation: subir .2s ease-out; }
   box-shadow: inset 0 -5px 0 var(--yellow-edge), 0 6px 18px rgba(0,0,0,.35);
 }
 .cerrar {
-  position: absolute; top: 10px; right: 10px; z-index: 2;
+  /* sticky: queda visible aunque se scrollee la ficha */
+  position: sticky; top: 10px; z-index: 2;
+  margin: 10px 10px -50px auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
   width: 40px; height: 40px; border-radius: 50%;
   border: 0; background: rgba(255,255,255,.92); color: var(--ink);
   display: grid; place-items: center; cursor: pointer;
@@ -334,7 +383,7 @@ dialog[open] { animation: subir .2s ease-out; }
     <label class="buscar">
       <span class="sr-only">Buscar</span>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" type="search" placeholder="Buscar: traición, dragones, cartas…" autocomplete="off">
+      <input id="q" type="search" placeholder="Buscar: traición, zombies, piratas…" autocomplete="off">
     </label>
     <button class="btn-filtros" id="btnFiltros" aria-expanded="false" aria-controls="panel">Filtros<span class="n" id="nFiltros" hidden></span></button>
   </div>
@@ -342,10 +391,12 @@ dialog[open] { animation: subir .2s ease-out; }
 
 <main class="cuerpo">
   <aside class="panel" id="panel" aria-label="Filtros"></aside>
-  <section aria-live="polite" aria-busy="false">
+  <div class="velo" id="velo" hidden></div>
+  <section aria-label="Juegos">
     <div class="resumen">
-      <p class="cuenta" id="cuenta"></p>
+      <p class="cuenta" id="cuenta" aria-live="polite"></p>
       <button class="limpiar" id="limpiar" hidden>Limpiar filtros</button>
+      <button class="azar-btn" id="azar" type="button">Elegir uno al azar</button>
       <label class="orden">Ordenar
         <select id="orden">
           <option value="nombre">Por nombre</option>
@@ -377,14 +428,15 @@ const FILTROS = [
     ["mas", "Más de 2 horas", j => j.dur != null && j.dur > 120],
   ]},
   { k: "comp", titulo: "Complejidad", multi: true, ops: [
-    ["facil", "Fácil", j => j.comp != null && j.comp <= 2],
-    ["media", "Media", j => j.comp != null && j.comp > 2 && j.comp < 4],
+    ["muyfacil", "Muy fácil", j => j.comp != null && j.comp < 2],
+    ["facil", "Fácil", j => j.comp != null && j.comp >= 2 && j.comp < 3],
+    ["media", "Media", j => j.comp != null && j.comp >= 3 && j.comp < 4],
     ["pesada", "Pesada", j => j.comp != null && j.comp >= 4],
   ]},
-  { k: "modo", titulo: "Cómo se juega", multi: true, ops: [
-    ["Competitivo", "Todos contra todos", j => j.modalidad === "Competitivo"],
-    ["Equipos", "En equipos", j => j.modalidad === "Equipos"],
-    ["Cooperativo", "Todos juntos", j => j.modalidad === "Cooperativo"],
+  { k: "modo", titulo: "Modo de juego", multi: true, ops: [
+    ["Competitivo", "Competitivo", j => j.modalidad === "Competitivo"],
+    ["Equipos", "Equipos", j => j.modalidad === "Equipos"],
+    ["Cooperativo", "Cooperativo", j => j.modalidad === "Cooperativo"],
     ["Semicooperativo", "Semicooperativo", j => j.modalidad === "Semicooperativo"],
   ]},
   { k: "azar", titulo: "Azar", multi: true, ops: [
@@ -444,7 +496,10 @@ const pesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS
 const fmtPrecio = p => p ? pesos.format(p) : "Sin precio";
 const fmtJug = j => j.jmin == null ? "?" : (j.jmin === j.jmax ? `${j.jmin}` : `${j.jmin}–${j.jmax}`);
 const fmtDur = d => d == null ? "Sin dato" : (d < 60 || d % 60 ? `${d} min` : `${d / 60} h`);
+const fmtJugadores = n => `${n} ${n === 1 ? "jugador" : "jugadores"}`;
 const sinTildes = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+// "dragones" encuentra "dragón", "zombies" encuentra "zombie"
+const raiz = p => p.length > 4 ? p.replace(/(es|s)$/, "") : p;
 JUEGOS.forEach(j => j._txt = sinTildes([j.nombre, j.nota, j.tematica, j.genero, j.familia, j.modalidad, ...j.desc].filter(Boolean).join(" ")));
 const thumb = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 const iniciales = n => n.replace(/^[¡¿]/, "").split(/[\s:]+/).filter(w => /^[A-ZÁÉÍÓÚÑ0-9]/i.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join("");
@@ -480,6 +535,16 @@ function construirFiltros() {
     }, n));
   }
   const panel = $("#panel");
+  panel.append(h("div", { class: "panel-tit" },
+    h("h2", {}, "Filtros"),
+    h("button", { class: "cerrar-panel", type: "button", "aria-label": "Cerrar filtros", onclick: () => panelAbierto(false) }, svg(ICO.x, 18))));
+  // Jugadores también dentro del panel, para no tener que volver arriba de todo
+  panel.append(h("fieldset", { class: "grupo" },
+    h("legend", {}, "¿Cuántos somos?"),
+    h("div", { class: "chips chips-n" }, Array.from({ length: MAX_JUG }, (_, i) => i + 1).map(n => h("button", {
+      class: "chip chip-n", type: "button", "aria-pressed": "false", "data-n": n, "aria-label": fmtJugadores(n),
+      onclick: () => { estado.n = estado.n === n ? null : n; actualizar(); },
+    }, n)))));
   FILTROS.forEach(f => {
     panel.append(h("fieldset", { class: "grupo" },
       h("legend", {}, f.titulo),
@@ -495,11 +560,21 @@ function construirFiltros() {
     ));
   });
   panel.append(h("button", { class: "ver-res", id: "verRes", type: "button", onclick: () => {
-    panel.classList.remove("abierto");
-    $("#btnFiltros").setAttribute("aria-expanded", "false");
+    panelAbierto(false);
     $("#cuenta").scrollIntoView({ block: "start" });
     window.scrollBy(0, -80);
   }}, "Ver juegos"));
+}
+
+function panelAbierto(abrir) {
+  const panel = $("#panel");
+  panel.classList.toggle("abierto", abrir);
+  $("#btnFiltros").setAttribute("aria-expanded", String(abrir));
+  const hoja = abrir && matchMedia("(max-width: 959px)").matches;
+  $("#velo").hidden = !hoja;
+  document.body.style.overflow = hoja ? "hidden" : "";
+  if (hoja) { panel.scrollTop = 0; panel.querySelector(".cerrar-panel").focus(); }
+  else if (!abrir) $("#btnFiltros").focus({ preventScroll: true });
 }
 
 function pasa(j, ignorar) {
@@ -510,7 +585,7 @@ function pasa(j, ignorar) {
     if (!f.ops.some(([val, , fn]) => s.has(val) && fn(j))) return false;
   }
   if (estado.q) {
-    const palabras = sinTildes(estado.q).split(/\s+/).filter(Boolean);
+    const palabras = sinTildes(estado.q).split(/\s+/).filter(Boolean).map(raiz);
     if (!palabras.every(p => j._txt.includes(p))) return false;
   }
   return true;
@@ -538,10 +613,11 @@ function tarjeta(j) {
     h("div", { class: "thumb" }, imagen(j)),
     h("div", { class: "card-b" },
       h("h3", {}, h("button", { class: "estirar", type: "button", onclick: () => abrir(j) }, j.nombre)),
+      j.nota && h("p", { class: "nota" }, j.nota),
       h("p", { class: "tipo" }, [j.familia, j.modalidad].filter(Boolean).join(", ")),
       h("div", { class: "datos" },
         h("span", { title: "Jugadores" }, svg(ICO.gente), fmtJug(j), h("span", { class: "sr-only" }, " jugadores")),
-        h("span", { title: "Duración máxima" }, svg(ICO.reloj), fmtDur(j.dur)),
+        h("span", { title: "Duración máxima" }, svg(ICO.reloj), j.dur == null ? "Sin dato" : `hasta ${fmtDur(j.dur)}`),
         h("span", { class: "precio" + (j.precio ? "" : " sin") }, fmtPrecio(j.precio)),
       ),
       pistas(j),
@@ -551,8 +627,10 @@ function tarjeta(j) {
   return el;
 }
 
+let listaActual = [];
 function actualizar(desdeHash) {
-  const lista = JUEGOS.filter(j => pasa(j)).sort(ORDEN[estado.orden] || ORDEN.nombre);
+  const lista = listaActual = JUEGOS.filter(j => pasa(j)).sort(ORDEN[estado.orden] || ORDEN.nombre);
+  $("#azar").disabled = lista.length < 2;
   const grilla = $("#grilla");
   if (lista.length) grilla.replaceChildren(...lista.map(tarjeta));
   else grilla.replaceChildren(h("div", { class: "vacio" },
@@ -560,11 +638,11 @@ function actualizar(desdeHash) {
     h("button", { type: "button", onclick: limpiar }, "Limpiar filtros")));
 
   const total = lista.length;
-  $("#cuenta").textContent = `${total} ${total === 1 ? "juego" : "juegos"}` + (estado.n ? ` para ${estado.n}` : "");
+  $("#cuenta").textContent = `${total} ${total === 1 ? "juego" : "juegos"}` + (estado.n ? ` para ${fmtJugadores(estado.n)}` : "");
   $("#verRes").textContent = `Ver ${total} ${total === 1 ? "juego" : "juegos"}`;
 
-  document.querySelectorAll(".ficha").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.n === estado.n)));
-  document.querySelectorAll(".chip").forEach(b => {
+  document.querySelectorAll(".ficha, .chip-n").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.n === estado.n)));
+  document.querySelectorAll(".chip:not(.chip-n)").forEach(b => {
     b.setAttribute("aria-pressed", String(estado[b.dataset.f].has(b.dataset.v)));
     // Cuántos juegos quedarían al sumar esta opción: deshabilita las que darían 0
     const f = FILTROS.find(x => x.k === b.dataset.f);
@@ -576,7 +654,7 @@ function actualizar(desdeHash) {
 
   const a = activos();
   $("#limpiar").hidden = a === 0;
-  const nf = FILTROS.reduce((t, f) => t + estado[f.k].size, 0);
+  const nf = (estado.n != null ? 1 : 0) + FILTROS.reduce((t, f) => t + estado[f.k].size, 0);
   $("#nFiltros").hidden = nf === 0;
   $("#nFiltros").textContent = nf;
   if (!desdeHash) guardarHash();
@@ -619,10 +697,15 @@ function abrir(j) {
   if (j.video) {
     video.append(h("button", {
       class: "play", type: "button", "aria-label": `Ver la reseña de ${j.nombre}`,
-      onclick: () => video.replaceChildren(h("iframe", {
-        src: `https://www.youtube-nocookie.com/embed/${j.video}?autoplay=1&rel=0`,
-        title: `Reseña de ${j.nombre}`, allow: "autoplay; encrypted-media; picture-in-picture", allowfullscreen: true,
-      })),
+      onclick: () => {
+        const iframe = h("iframe", {
+          src: `https://www.youtube-nocookie.com/embed/${j.video}?autoplay=1&rel=0` + (j.inicio ? `&start=${j.inicio}` : ""),
+          title: `Reseña de ${j.nombre}`, allow: "autoplay; encrypted-media; picture-in-picture", allowfullscreen: true,
+        });
+        video.classList.toggle("es-short", j.short);
+        video.replaceChildren(iframe);
+        iframe.focus();
+      },
     }, svg(ICO.play, 30)));
   }
   const dato = (dt, dd) => h("div", {}, h("dt", {}, dt), h("dd", {}, dd));
@@ -635,15 +718,15 @@ function abrir(j) {
       j.tematica && h("p", { class: "f-tema" }, j.tematica),
       h("dl", { class: "f-datos" },
         dato("Jugadores", fmtJug(j)),
-        dato("Duración", fmtDur(j.dur)),
+        dato("Duración máxima", fmtDur(j.dur)),
         dato("Precio", fmtPrecio(j.precio)),
-        dato("Se aprende", j.curva ? `Curva ${j.curva.toLowerCase()}` : "Sin dato"),
+        dato("Curva de aprendizaje", j.curva || "Sin dato"),
         dato("Género", j.genero || "Sin dato"),
         dato("Modo", j.modalidad || "Sin dato"),
       ),
       pistas(j),
-      h("div", { class: "f-desc" }, j.desc.map(p => h("p", {}, p))),
-      j.url && h("a", { class: "f-link", href: j.url, target: "_blank", rel: "noopener" }, "Abrir la reseña en YouTube", svg(ICO.ext)),
+      h("div", { class: "f-desc" }, j.desc.length ? j.desc.map(p => h("p", {}, p)) : h("p", { class: "f-nota" }, "Todavía no hay descripción de este juego.")),
+      j.url && h("a", { class: "f-link", href: j.url, target: "_blank", rel: "noopener" }, j.video ? "Abrir la reseña en YouTube" : "Abrir la reseña", svg(ICO.ext)),
     ),
   );
   dlg.showModal();
@@ -660,9 +743,11 @@ let tq;
 $("#q").addEventListener("input", e => { clearTimeout(tq); tq = setTimeout(() => { estado.q = e.target.value.trim(); actualizar(); }, 120); });
 $("#orden").addEventListener("change", e => { estado.orden = e.target.value; actualizar(); });
 $("#limpiar").addEventListener("click", limpiar);
-$("#btnFiltros").addEventListener("click", e => {
-  const abierto = $("#panel").classList.toggle("abierto");
-  e.currentTarget.setAttribute("aria-expanded", String(abierto));
+$("#btnFiltros").addEventListener("click", () => panelAbierto(!$("#panel").classList.contains("abierto")));
+$("#velo").addEventListener("click", () => panelAbierto(false));
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#panel").classList.contains("abierto") && !dlg.open) panelAbierto(false); });
+$("#azar").addEventListener("click", () => {
+  if (listaActual.length) abrir(listaActual[Math.floor(Math.random() * listaActual.length)]);
 });
 window.addEventListener("hashchange", () => { leerHash(); actualizar(true); });
 actualizar(true);
