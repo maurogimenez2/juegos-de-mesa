@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿A qué jugamos?</title>
+<meta name="description" content="Lista de juegos de mesa con filtros por cantidad de jugadores, duración, complejidad y precio.">
+<meta property="og:title" content="¿A qué jugamos?">
+<meta property="og:description" content="Lista de juegos de mesa con filtros por cantidad de jugadores, duración, complejidad y precio.">
+<meta name="theme-color" content="#1D4A39">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23F0B429' d='M16 2a5 5 0 0 1 5 5c0 1.3-.5 2.5-1.3 3.4L29 13c1.6.5 1.6 2.7 0 3.2l-6.5 2L26 28c.4 1.1-.4 2-1.5 2h-5L16 23l-3.5 7h-5c-1.1 0-1.9-.9-1.5-2l3.5-9.8-6.5-2c-1.6-.5-1.6-2.7 0-3.2l9.3-2.6A5 5 0 0 1 16 2z'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --felt: #1D4A39;
+  --felt-deep: #163A2D;
+  --felt-ink: #EAF2EC;
+  --felt-muted: #A9C4B5;
+  --paper: #E4E8E1;
+  --card: #FFFFFF;
+  --ink: #17201B;
+  --muted: #56635B;
+  --line: #CBD3CB;
+  --wood: #D8C49C;
+  --wood-edge: #B39C6E;
+  --yellow: #F0B429;
+  --yellow-edge: #B9840C;
+  --blue: #2F5DA8;
+  --red: #C8384A;
+  --green: #2F8F57;
+  --track-off: #E3E7E1;
+  --sans: "Bricolage Grotesque", system-ui, sans-serif;
+  --serif: "Source Serif 4", Georgia, serif;
+  --gutter: 16px;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 16px/1.45 var(--sans);
+  font-optical-sizing: auto;
+}
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- Mesa (encabezado) ---------- */
+.mesa {
+  background:
+    radial-gradient(120% 90% at 30% 0%, var(--felt) 0%, var(--felt-deep) 100%);
+  color: var(--felt-ink);
+  padding: 40px var(--gutter) 32px;
+}
+.mesa-in { max-width: 1240px; margin: 0 auto; }
+.mesa h1 {
+  margin: 0;
+  font-size: clamp(2.6rem, 9vw, 5rem);
+  font-weight: 800;
+  font-variation-settings: "opsz" 96;
+  line-height: .95;
+  letter-spacing: -0.035em;
+}
+.mesa .bajada {
+  margin: 12px 0 0;
+  max-width: 46ch;
+  color: var(--felt-muted);
+  font-size: 1.05rem;
+}
+.somos { margin: 28px 0 0; border: 0; padding: 0; }
+.somos legend {
+  padding: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.fichas { display: flex; flex-wrap: wrap; gap: 10px; }
+.ficha {
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--wood);
+  color: #3B2F17;
+  font-weight: 800;
+  font-size: 1.05rem;
+  cursor: pointer;
+  box-shadow: inset 0 -4px 0 var(--wood-edge), 0 2px 0 rgba(0,0,0,.25);
+  transition: transform .12s ease, background-color .12s ease;
+}
+.ficha:hover { transform: translateY(-2px); }
+.ficha[aria-pressed="true"] {
+  background: var(--yellow);
+  color: #2A1E00;
+  box-shadow: inset 0 -4px 0 var(--yellow-edge), 0 0 0 3px var(--felt-ink);
+  transform: translateY(-3px);
+}
+
+/* ---------- Barra de búsqueda ---------- */
+.barra {
+  position: sticky; top: 0; z-index: 5;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+  padding: 12px var(--gutter);
+}
+.barra-in { max-width: 1240px; margin: 0 auto; display: flex; gap: 10px; }
+.buscar { flex: 1; position: relative; min-width: 0; }
+.buscar svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+.buscar input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px 0 40px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  font-size: 16px;
+}
+.btn-filtros {
+  height: 44px; padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid var(--ink);
+  background: var(--ink); color: var(--card);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-filtros .n {
+  display: inline-grid; place-items: center;
+  min-width: 22px; height: 22px; margin-left: 6px; padding: 0 6px;
+  border-radius: 11px;
+  background: var(--yellow); color: #2A1E00;
+  font-size: .8rem; font-weight: 800;
+}
+.btn-filtros .n[hidden] { display: none; }
+.ver-res {
+  width: 100%; height: 46px; margin-top: 4px;
+  border: 0; border-radius: 10px;
+  background: var(--yellow); color: #2A1E00;
+  font-weight: 700; cursor: pointer;
+  box-shadow: inset 0 -3px 0 var(--yellow-edge);
+}
+
+/* ---------- Layout ---------- */
+.cuerpo {
+  max-width: 1240px; margin: 0 auto;
+  padding: 16px var(--gutter) 48px;
+  display: grid; gap: 20px;
+}
+.panel { display: none; }
+.panel.abierto { display: block; }
+.grupo { margin: 0 0 18px; border: 0; padding: 0; min-width: 0; }
+.grupo legend { padding: 0; font-weight: 700; margin-bottom: 8px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: .92rem;
+  cursor: pointer;
+  line-height: 1.1;
+}
+.chip:hover { border-color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--card); }
+
+.resumen {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+  margin-bottom: 14px;
+}
+.resumen .cuenta { font-size: 1.15rem; font-weight: 700; margin: 0; }
+.limpiar {
+  border: 0; background: none; padding: 4px 0;
+  color: var(--blue); text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer;
+}
+.orden { margin-left: auto; display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .92rem; }
+.orden select {
+  height: 36px; border-radius: 8px; border: 1px solid var(--line);
+  background: var(--card); padding: 0 8px; color: var(--ink);
+}
+
+@media (min-width: 960px) {
+  .cuerpo { grid-template-columns: 260px 1fr; gap: 32px; }
+  .panel { display: block; position: sticky; top: 84px; align-self: start; max-height: calc(100vh - 100px); overflow: auto; padding-right: 4px; }
+  .btn-filtros, .ver-res { display: none; }
+}
+
+/* ---------- Tarjetas ---------- */
+.grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr));
+  gap: 16px;
+}
+.card {
+  position: relative;
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  display: flex; flex-direction: column;
+}
+.card:hover { border-color: var(--muted); }
+.card:hover .thumb img { transform: scale(1.03); }
+.thumb {
+  aspect-ratio: 16 / 9;
+  background: var(--felt);
+  overflow: hidden;
+  position: relative;
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .25s ease; }
+.ph {
+  width: 100%; height: 100%;
+  display: grid; place-items: center;
+  color: var(--yellow);
+  font-weight: 800; font-size: 2.6rem; letter-spacing: -0.03em;
+  font-variation-settings: "opsz" 96;
+}
+.card-b { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.card h3 { margin: 0; font-size: 1.2rem; line-height: 1.15; font-weight: 700; letter-spacing: -0.01em; }
+.estirar {
+  all: unset; cursor: pointer;
+}
+.estirar::after { content: ""; position: absolute; inset: 0; }
+.estirar:focus-visible { outline: none; }
+.card:has(.estirar:focus-visible) { outline: 3px solid var(--blue); outline-offset: 2px; }
+.card .tipo { margin: 0; color: var(--muted); font-size: .9rem; }
+.datos { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .92rem; align-items: center; }
+.datos span { display: inline-flex; align-items: center; gap: 4px; }
+.datos svg { color: var(--muted); flex: none; }
+.precio { font-weight: 700; margin-left: auto; }
+.precio.sin { font-weight: 400; color: var(--muted); }
+
+.pistas { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 2px 0 0; font-size: .82rem; align-items: center; }
+.pistas dt { color: var(--muted); }
+.pistas dd { margin: 0; }
+.pista { display: flex; gap: 3px; }
+.pista i {
+  width: 16px; height: 8px; border-radius: 2px;
+  background: var(--track-off);
+}
+.pista[data-k="comp"] { --c: var(--blue); }
+.pista[data-k="azar"] { --c: var(--red); }
+.pista[data-k="rejug"] { --c: var(--green); }
+.pista i.on { background: var(--c); }
+.pista i.half { background: linear-gradient(90deg, var(--c) 50%, var(--track-off) 50%); }
+
+.vacio {
+  grid-column: 1 / -1;
+  background: var(--card); border: 1px dashed var(--muted); border-radius: 12px;
+  padding: 32px 20px; text-align: center;
+}
+.vacio p { margin: 0 0 12px; font-size: 1.05rem; }
+.vacio button {
+  border: 0; border-radius: 10px; padding: 10px 16px;
+  background: var(--ink); color: var(--card); font-weight: 600; cursor: pointer;
+}
+
+.pie { max-width: 1240px; margin: 0 auto; padding: 0 var(--gutter) 40px; color: var(--muted); font-size: .88rem; }
+
+/* ---------- Ficha (modal) ---------- */
+dialog {
+  border: 0; padding: 0;
+  width: min(720px, 100%);
+  max-height: min(92vh, 100%);
+  border-radius: 16px;
+  background: var(--card); color: var(--ink);
+  box-shadow: 0 24px 60px rgba(10, 30, 20, .35);
+}
+dialog::backdrop { background: rgba(14, 34, 26, .6); }
+@media (max-width: 600px) {
+  dialog { margin: auto 0 0; width: 100%; max-width: 100%; border-radius: 16px 16px 0 0; max-height: 94vh; }
+}
+dialog[open] { animation: subir .2s ease-out; }
+@keyframes subir { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  dialog[open] { animation: none; }
+  .ficha, .thumb img { transition: none; }
+}
+.f-video { position: relative; aspect-ratio: 16 / 9; background: var(--felt-deep); }
+.f-video img, .f-video iframe { width: 100%; height: 100%; object-fit: cover; display: block; border: 0; }
+.play {
+  position: absolute; inset: 0; margin: auto;
+  width: 72px; height: 72px; border-radius: 50%;
+  border: 0; background: var(--yellow); color: #2A1E00;
+  display: grid; place-items: center; cursor: pointer;
+  box-shadow: inset 0 -5px 0 var(--yellow-edge), 0 6px 18px rgba(0,0,0,.35);
+}
+.cerrar {
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 0; background: rgba(255,255,255,.92); color: var(--ink);
+  display: grid; place-items: center; cursor: pointer;
+}
+.f-b { padding: 18px 20px 24px; }
+.f-b h2 { margin: 0; font-size: clamp(1.6rem, 5vw, 2.2rem); line-height: 1.05; letter-spacing: -0.02em; font-weight: 800; }
+.f-nota { margin: 6px 0 0; color: var(--muted); font-style: italic; }
+.f-tema { margin: 8px 0 0; font-size: 1.05rem; color: var(--muted); }
+.f-datos {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px; margin: 18px 0; padding: 14px 0;
+  border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+}
+.f-datos div { display: flex; flex-direction: column; }
+.f-datos dt { color: var(--muted); font-size: .85rem; }
+.f-datos dd { margin: 0; font-weight: 700; font-size: 1.05rem; }
+.f-b .pistas { font-size: .9rem; gap: 6px 14px; }
+.f-b .pista i { width: 26px; height: 10px; }
+.f-desc { margin-top: 18px; font-family: var(--serif); font-size: 1.04rem; line-height: 1.62; max-width: 68ch; }
+.f-desc p { margin: 0 0 .9em; }
+.f-link {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 6px;
+  color: var(--blue); font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<header class="mesa">
+  <div class="mesa-in">
+    <h1>¿A qué jugamos?</h1>
+    <p class="bajada" id="bajada">Los juegos de la lista, con precio, duración y de qué se trata cada uno.</p>
+    <fieldset class="somos">
+      <legend>¿Cuántos somos?</legend>
+      <div class="fichas" id="fichas"></div>
+    </fieldset>
+  </div>
+</header>
+
+<div class="barra">
+  <div class="barra-in">
+    <label class="buscar">
+      <span class="sr-only">Buscar</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Buscar: traición, dragones, cartas…" autocomplete="off">
+    </label>
+    <button class="btn-filtros" id="btnFiltros" aria-expanded="false" aria-controls="panel">Filtros<span class="n" id="nFiltros" hidden></span></button>
+  </div>
+</div>
+
+<main class="cuerpo">
+  <aside class="panel" id="panel" aria-label="Filtros"></aside>
+  <section aria-live="polite" aria-busy="false">
+    <div class="resumen">
+      <p class="cuenta" id="cuenta"></p>
+      <button class="limpiar" id="limpiar" hidden>Limpiar filtros</button>
+      <label class="orden">Ordenar
+        <select id="orden">
+          <option value="nombre">Por nombre</option>
+          <option value="barato">Más baratos</option>
+          <option value="caro">Más caros</option>
+          <option value="corto">Más cortos</option>
+          <option value="liviano">Más fáciles</option>
+          <option value="pesado">Más complejos</option>
+          <option value="rejug">Más rejugables</option>
+        </select>
+      </label>
+    </div>
+    <div class="grilla" id="grilla"></div>
+  </section>
+</main>
+
+<p class="pie">Los precios son de referencia y pueden estar desactualizados. Las imágenes salen del video de reseña de cada juego.</p>
+
+<dialog id="dlg" aria-labelledby="dlgTitulo"></dialog>
+
+<script>
+const JUEGOS = /*__DATA__*/[];
+
+const FILTROS = [
+  { k: "dur", titulo: "Duración", multi: false, ops: [
+    ["30", "Hasta 30 min", j => j.dur != null && j.dur <= 30],
+    ["60", "Hasta 1 hora", j => j.dur != null && j.dur <= 60],
+    ["120", "Hasta 2 horas", j => j.dur != null && j.dur <= 120],
+    ["mas", "Más de 2 horas", j => j.dur != null && j.dur > 120],
+  ]},
+  { k: "comp", titulo: "Complejidad", multi: true, ops: [
+    ["facil", "Fácil", j => j.comp != null && j.comp <= 2],
+    ["media", "Media", j => j.comp != null && j.comp > 2 && j.comp < 4],
+    ["pesada", "Pesada", j => j.comp != null && j.comp >= 4],
+  ]},
+  { k: "modo", titulo: "Cómo se juega", multi: true, ops: [
+    ["Competitivo", "Todos contra todos", j => j.modalidad === "Competitivo"],
+    ["Equipos", "En equipos", j => j.modalidad === "Equipos"],
+    ["Cooperativo", "Todos juntos", j => j.modalidad === "Cooperativo"],
+    ["Semicooperativo", "Semicooperativo", j => j.modalidad === "Semicooperativo"],
+  ]},
+  { k: "azar", titulo: "Azar", multi: true, ops: [
+    ["poco", "Poco", j => j.azar != null && j.azar <= 2],
+    ["algo", "Algo", j => j.azar != null && j.azar > 2 && j.azar < 4],
+    ["mucho", "Mucho", j => j.azar != null && j.azar >= 4],
+  ]},
+  { k: "precio", titulo: "Precio", multi: false, ops: [
+    ["50", "Hasta $50.000", j => j.precio != null && j.precio <= 50000],
+    ["100", "Hasta $100.000", j => j.precio != null && j.precio <= 100000],
+    ["200", "Hasta $200.000", j => j.precio != null && j.precio <= 200000],
+  ]},
+  { k: "fam", titulo: "Género", multi: true, ops: [] },
+];
+// Las familias de género salen de los datos, ordenadas por cantidad de juegos
+(() => {
+  const cuenta = {};
+  JUEGOS.forEach(j => cuenta[j.familia] = (cuenta[j.familia] || 0) + 1);
+  FILTROS.find(f => f.k === "fam").ops = Object.keys(cuenta)
+    .sort((a, b) => cuenta[b] - cuenta[a] || a.localeCompare(b, "es"))
+    .map(f => [f, f, j => j.familia === f]);
+})();
+
+const MAX_JUG = Math.max(...JUEGOS.map(j => j.jmax || 0));
+const estado = { n: null, q: "", orden: "nombre" };
+FILTROS.forEach(f => estado[f.k] = new Set());
+
+const $ = s => document.querySelector(s);
+function h(tag, attrs, ...hijos) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of hijos.flat()) if (c != null && c !== false) el.append(c.nodeType ? c : String(c));
+  return el;
+}
+function svg(path, size = 16) {
+  const s = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  s.setAttribute("width", size); s.setAttribute("height", size); s.setAttribute("viewBox", "0 0 24 24");
+  s.setAttribute("fill", "none"); s.setAttribute("stroke", "currentColor"); s.setAttribute("stroke-width", "2");
+  s.setAttribute("stroke-linecap", "round"); s.setAttribute("stroke-linejoin", "round"); s.setAttribute("aria-hidden", "true");
+  s.innerHTML = path;
+  return s;
+}
+const ICO = {
+  gente: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.6 3.2-6 6.5-6s6 2.4 6.5 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16.5 14.2c2.6.3 4.5 2.4 5 5.3"/>',
+  reloj: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  play: '<path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+  ext: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+};
+
+const pesos = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+const fmtPrecio = p => p ? pesos.format(p) : "Sin precio";
+const fmtJug = j => j.jmin == null ? "?" : (j.jmin === j.jmax ? `${j.jmin}` : `${j.jmin}–${j.jmax}`);
+const fmtDur = d => d == null ? "Sin dato" : (d < 60 || d % 60 ? `${d} min` : `${d / 60} h`);
+const sinTildes = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+JUEGOS.forEach(j => j._txt = sinTildes([j.nombre, j.nota, j.tematica, j.genero, j.familia, j.modalidad, ...j.desc].filter(Boolean).join(" ")));
+const thumb = id => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+const iniciales = n => n.replace(/^[¡¿]/, "").split(/[\s:]+/).filter(w => /^[A-ZÁÉÍÓÚÑ0-9]/i.test(w)).slice(0, 2).map(w => w[0].toUpperCase()).join("");
+
+function imagen(j, cls) {
+  const ph = () => h("div", { class: "ph", "aria-hidden": "true" }, iniciales(j.nombre));
+  if (!j.video) return ph();
+  const img = h("img", { src: thumb(j.video), alt: "", loading: "lazy", decoding: "async", class: cls });
+  img.addEventListener("error", () => img.replaceWith(ph()), { once: true });
+  return img;
+}
+
+function pistas(j) {
+  const fila = (k, etiqueta) => {
+    const v = j[k];
+    const celdas = [1, 2, 3, 4, 5].map(i => h("i", { class: v >= i ? "on" : (v >= i - 0.5 ? "half" : null) }));
+    return [
+      h("dt", {}, etiqueta),
+      h("dd", {}, h("span", { class: "pista", "data-k": k, role: "img", "aria-label": v == null ? "sin dato" : `${String(v).replace(".", ",")} de 5` }, celdas)),
+    ];
+  };
+  return h("dl", { class: "pistas" }, fila("comp", "Complejidad"), fila("azar", "Azar"), fila("rejug", "Rejugabilidad"));
+}
+
+/* ---------- Filtros ---------- */
+function construirFiltros() {
+  const fichas = $("#fichas");
+  for (let n = 1; n <= MAX_JUG; n++) {
+    fichas.append(h("button", {
+      class: "ficha", type: "button", "aria-pressed": "false", "data-n": n,
+      "aria-label": `${n} ${n === 1 ? "jugador" : "jugadores"}`,
+      onclick: () => { estado.n = estado.n === n ? null : n; actualizar(); },
+    }, n));
+  }
+  const panel = $("#panel");
+  FILTROS.forEach(f => {
+    panel.append(h("fieldset", { class: "grupo" },
+      h("legend", {}, f.titulo),
+      h("div", { class: "chips" }, f.ops.map(([val, txt]) => h("button", {
+        class: "chip", type: "button", "aria-pressed": "false", "data-f": f.k, "data-v": val,
+        onclick: () => {
+          const s = estado[f.k];
+          if (s.has(val)) s.delete(val);
+          else { if (!f.multi) s.clear(); s.add(val); }
+          actualizar();
+        },
+      }, txt)))
+    ));
+  });
+  panel.append(h("button", { class: "ver-res", id: "verRes", type: "button", onclick: () => {
+    panel.classList.remove("abierto");
+    $("#btnFiltros").setAttribute("aria-expanded", "false");
+    $("#cuenta").scrollIntoView({ block: "start" });
+    window.scrollBy(0, -80);
+  }}, "Ver juegos"));
+}
+
+function pasa(j, ignorar) {
+  if (estado.n != null && ignorar !== "n" && !(j.jmin <= estado.n && estado.n <= j.jmax)) return false;
+  for (const f of FILTROS) {
+    const s = estado[f.k];
+    if (!s.size || ignorar === f.k) continue;
+    if (!f.ops.some(([val, , fn]) => s.has(val) && fn(j))) return false;
+  }
+  if (estado.q) {
+    const palabras = sinTildes(estado.q).split(/\s+/).filter(Boolean);
+    if (!palabras.every(p => j._txt.includes(p))) return false;
+  }
+  return true;
+}
+
+const ORDEN = {
+  nombre: (a, b) => a.nombre.replace(/^¡/, "").localeCompare(b.nombre.replace(/^¡/, ""), "es"),
+  barato: (a, b) => (a.precio ?? Infinity) - (b.precio ?? Infinity),
+  caro: (a, b) => (b.precio ?? -1) - (a.precio ?? -1),
+  corto: (a, b) => (a.dur ?? Infinity) - (b.dur ?? Infinity),
+  liviano: (a, b) => (a.comp ?? 9) - (b.comp ?? 9),
+  pesado: (a, b) => (b.comp ?? 0) - (a.comp ?? 0),
+  rejug: (a, b) => (b.rejug ?? 0) - (a.rejug ?? 0),
+};
+
+function activos() {
+  return (estado.n != null ? 1 : 0) + (estado.q ? 1 : 0) + FILTROS.reduce((t, f) => t + estado[f.k].size, 0);
+}
+
+/* ---------- Render ---------- */
+const tarjetas = new Map();
+function tarjeta(j) {
+  if (tarjetas.has(j)) return tarjetas.get(j);
+  const el = h("article", { class: "card" },
+    h("div", { class: "thumb" }, imagen(j)),
+    h("div", { class: "card-b" },
+      h("h3", {}, h("button", { class: "estirar", type: "button", onclick: () => abrir(j) }, j.nombre)),
+      h("p", { class: "tipo" }, [j.familia, j.modalidad].filter(Boolean).join(", ")),
+      h("div", { class: "datos" },
+        h("span", { title: "Jugadores" }, svg(ICO.gente), fmtJug(j), h("span", { class: "sr-only" }, " jugadores")),
+        h("span", { title: "Duración máxima" }, svg(ICO.reloj), fmtDur(j.dur)),
+        h("span", { class: "precio" + (j.precio ? "" : " sin") }, fmtPrecio(j.precio)),
+      ),
+      pistas(j),
+    ),
+  );
+  tarjetas.set(j, el);
+  return el;
+}
+
+function actualizar(desdeHash) {
+  const lista = JUEGOS.filter(j => pasa(j)).sort(ORDEN[estado.orden] || ORDEN.nombre);
+  const grilla = $("#grilla");
+  if (lista.length) grilla.replaceChildren(...lista.map(tarjeta));
+  else grilla.replaceChildren(h("div", { class: "vacio" },
+    h("p", {}, "Ningún juego cumple todo eso a la vez. Probá sacando algún filtro."),
+    h("button", { type: "button", onclick: limpiar }, "Limpiar filtros")));
+
+  const total = lista.length;
+  $("#cuenta").textContent = `${total} ${total === 1 ? "juego" : "juegos"}` + (estado.n ? ` para ${estado.n}` : "");
+  $("#verRes").textContent = `Ver ${total} ${total === 1 ? "juego" : "juegos"}`;
+
+  document.querySelectorAll(".ficha").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.n === estado.n)));
+  document.querySelectorAll(".chip").forEach(b => {
+    b.setAttribute("aria-pressed", String(estado[b.dataset.f].has(b.dataset.v)));
+    // Cuántos juegos quedarían al sumar esta opción: deshabilita las que darían 0
+    const f = FILTROS.find(x => x.k === b.dataset.f);
+    const fn = f.ops.find(o => o[0] === b.dataset.v)[2];
+    const n = JUEGOS.filter(j => pasa(j, f.k) && fn(j)).length;
+    b.disabled = n === 0 && !estado[f.k].has(b.dataset.v);
+    b.style.opacity = b.disabled ? ".4" : "";
+  });
+
+  const a = activos();
+  $("#limpiar").hidden = a === 0;
+  const nf = FILTROS.reduce((t, f) => t + estado[f.k].size, 0);
+  $("#nFiltros").hidden = nf === 0;
+  $("#nFiltros").textContent = nf;
+  if (!desdeHash) guardarHash();
+}
+
+function limpiar() {
+  estado.n = null; estado.q = ""; $("#q").value = "";
+  FILTROS.forEach(f => estado[f.k].clear());
+  actualizar();
+}
+
+/* ---------- Estado en la URL (para compartir una búsqueda) ---------- */
+function guardarHash() {
+  const p = new URLSearchParams();
+  if (estado.n) p.set("n", estado.n);
+  if (estado.q) p.set("q", estado.q);
+  if (estado.orden !== "nombre") p.set("orden", estado.orden);
+  FILTROS.forEach(f => { if (estado[f.k].size) p.set(f.k, [...estado[f.k]].join(",")); });
+  const s = p.toString();
+  history.replaceState(null, "", s ? "#" + s : location.pathname + location.search);
+}
+function leerHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  const n = parseInt(p.get("n"), 10);
+  estado.n = n >= 1 && n <= MAX_JUG ? n : null;
+  estado.q = p.get("q") || "";
+  estado.orden = ORDEN[p.get("orden")] ? p.get("orden") : "nombre";
+  FILTROS.forEach(f => {
+    const validos = new Set(f.ops.map(o => o[0]));
+    estado[f.k] = new Set((p.get(f.k) || "").split(",").filter(v => validos.has(v)));
+  });
+  $("#q").value = estado.q;
+  $("#orden").value = estado.orden;
+}
+
+/* ---------- Ficha ---------- */
+const dlg = $("#dlg");
+function abrir(j) {
+  const video = h("div", { class: "f-video" }, imagen(j));
+  if (j.video) {
+    video.append(h("button", {
+      class: "play", type: "button", "aria-label": `Ver la reseña de ${j.nombre}`,
+      onclick: () => video.replaceChildren(h("iframe", {
+        src: `https://www.youtube-nocookie.com/embed/${j.video}?autoplay=1&rel=0`,
+        title: `Reseña de ${j.nombre}`, allow: "autoplay; encrypted-media; picture-in-picture", allowfullscreen: true,
+      })),
+    }, svg(ICO.play, 30)));
+  }
+  const dato = (dt, dd) => h("div", {}, h("dt", {}, dt), h("dd", {}, dd));
+  dlg.replaceChildren(
+    h("button", { class: "cerrar", type: "button", "aria-label": "Cerrar", onclick: () => dlg.close() }, svg(ICO.x, 20)),
+    video,
+    h("div", { class: "f-b" },
+      h("h2", { id: "dlgTitulo" }, j.nombre),
+      j.nota && h("p", { class: "f-nota" }, j.nota),
+      j.tematica && h("p", { class: "f-tema" }, j.tematica),
+      h("dl", { class: "f-datos" },
+        dato("Jugadores", fmtJug(j)),
+        dato("Duración", fmtDur(j.dur)),
+        dato("Precio", fmtPrecio(j.precio)),
+        dato("Se aprende", j.curva ? `Curva ${j.curva.toLowerCase()}` : "Sin dato"),
+        dato("Género", j.genero || "Sin dato"),
+        dato("Modo", j.modalidad || "Sin dato"),
+      ),
+      pistas(j),
+      h("div", { class: "f-desc" }, j.desc.map(p => h("p", {}, p))),
+      j.url && h("a", { class: "f-link", href: j.url, target: "_blank", rel: "noopener" }, "Abrir la reseña en YouTube", svg(ICO.ext)),
+    ),
+  );
+  dlg.showModal();
+  dlg.scrollTop = 0;
+}
+dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
+dlg.addEventListener("close", () => dlg.replaceChildren());
+
+/* ---------- Arranque ---------- */
+construirFiltros();
+leerHash();
+$("#bajada").textContent = `Los ${JUEGOS.length} juegos de la lista, con precio, duración y de qué se trata cada uno.`;
+let tq;
+$("#q").addEventListener("input", e => { clearTimeout(tq); tq = setTimeout(() => { estado.q = e.target.value.trim(); actualizar(); }, 120); });
+$("#orden").addEventListener("change", e => { estado.orden = e.target.value; actualizar(); });
+$("#limpiar").addEventListener("click", limpiar);
+$("#btnFiltros").addEventListener("click", e => {
+  const abierto = $("#panel").classList.toggle("abierto");
+  e.currentTarget.setAttribute("aria-expanded", String(abierto));
+});
+window.addEventListener("hashchange", () => { leerHash(); actualizar(true); });
+actualizar(true);
+</script>
+</body>
+</html>
